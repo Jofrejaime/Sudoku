@@ -11,7 +11,6 @@ SRCS = \
 	utils/utils.c
 
 OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o)
-DEPS = $(OBJS:.o=.d)
 
 all: $(NAME)
 
@@ -20,7 +19,7 @@ $(NAME): $(OBJS)
 
 $(OBJ_DIR)/%.o: %.c sudoku.h
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -MMD -MP -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
 	rm -rf $(OBJ_DIR)
@@ -34,5 +33,3 @@ run: $(NAME)
 	./$(NAME) map1.txt
 
 .PHONY: all clean fclean re run
-
--include $(DEPS)
