@@ -177,9 +177,9 @@ void    solve(int **tb, int order)
 {
     if (board_size(order) >= 64)
     {
-        printf("Ordem muito grande para resolver\n");
+        printf("Order too large to solve\n");
         return ;
     }
     if (!backtrack(tb, order))
-        printf("Nenhuma solucao\n");
+        printf("No solution found\n");
 }
