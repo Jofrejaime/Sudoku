@@ -6,7 +6,7 @@ OBJ_DIR = obj
 
 SRCS = \
 	main.c \
-	backtracking/backtraking.c \
+	backtracking/backtracking.c \
 	general_utils/get_next_line.c \
 	general_utils/utils.c \
 	validator/parser.c \
@@ -32,6 +32,6 @@ fclean: clean
 re: fclean all
 
 run: $(NAME)
-	./$(NAME) map1.txt
+	./$(NAME) map2.txt
 
 .PHONY: all clean fclean re run
