@@ -1,40 +1,38 @@
-# Compiler
 CC = gcc
+CFLAGS = -Wall -Wextra -Werror -I.
 
-# Flags
-CFLAGS = -Wall -Wextra -Werror
-
-# Executable name
 NAME = sudoku
+OBJ_DIR = obj
 
-# Source files
-SRCS = backtraking.c get_next_line.c main.c utils.c
+SRCS = \
+	main.c \
+	backtracking/backtraking.c \
+	utils/get_next_line.c \
+	utils/utils.c
 
-# Object files
-OBJS = $(SRCS:.c=.o)
+OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o)
+DEPS = $(OBJS:.o=.d)
 
-# Default rule
 all: $(NAME)
 
-# Compile executable
 $(NAME): $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -o $(NAME)
+	$(CC) $(CFLAGS) $(OBJS) -o $@
 
-# Compile .c to .o
-%.o: %.c sudoku.h
-	$(CC) $(CFLAGS) -c $< -o $@
+$(OBJ_DIR)/%.o: %.c sudoku.h
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -MMD -MP -c $< -o $@
 
-# Clean object files
 clean:
-	rm -f $(OBJS)
+	rm -rf $(OBJ_DIR)
 
-# Clean everything
 fclean: clean
-	rm -f $(NAME)
+	rm -f $(NAME) $(NAME).exe
 
-# Rebuild
 re: fclean all
 
-# Run with map
 run: $(NAME)
 	./$(NAME) map1.txt
+
+.PHONY: all clean fclean re run
+
+-include $(DEPS)
