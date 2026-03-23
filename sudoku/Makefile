@@ -8,7 +8,7 @@ CFLAGS = -Wall -Wextra -Werror
 NAME = sudoku
 
 # Source files
-SRCS = backtraking.c get_next_line.c
+SRCS = backtraking.c get_next_line.c main.c utils.c
 
 # Object files
 OBJS = $(SRCS:.c=.o)
