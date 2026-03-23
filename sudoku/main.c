@@ -15,7 +15,10 @@ int main(int argc, char *argv[])
         printf("invalid map!\n");
         return (1);
     }
+<<<<<<< HEAD
+    solve(sudoku->tab, sudoku->order);
     print(sudoku->tab, sudoku->order);
     free_sudoku(sudoku);
     return (0);
 }
+>>>>>>> 7801da1fc46ec5e234ba5d078beea1679449d585
