@@ -12,67 +12,9 @@ static unsigned long long full_mask(int size)
     return ((1ULL << size) - 1ULL);
 }
 
-static void mark_row_used(int **tb, int size, int row, unsigned long long *used)
+static int  box_index(int order, int row, int col)
 {
-    int col;
-
-    col = 0;
-    while (col < size)
-    {
-        if (tb[row][col] > 0)
-            *used |= (1ULL << (tb[row][col] - 1));
-        col++;
-    }
-}
-
-static void mark_col_used(int **tb, int size, int col, unsigned long long *used)
-{
-    int row;
-
-    row = 0;
-    while (row < size)
-    {
-        if (tb[row][col] > 0)
-            *used |= (1ULL << (tb[row][col] - 1));
-        row++;
-    }
-}
-
-static void mark_box_used(int **tb, int order, int row, int col,
-    unsigned long long *used)
-{
-    int start_row;
-    int start_col;
-    int r;
-    int c;
-
-    start_row = (row / order) * order;
-    start_col = (col / order) * order;
-    r = start_row;
-    while (r < start_row + order)
-    {
-        c = start_col;
-        while (c < start_col + order)
-        {
-            if (tb[r][c] > 0)
-                *used |= (1ULL << (tb[r][c] - 1));
-            c++;
-        }
-        r++;
-    }
-}
-
-static unsigned long long get_possible(int **tb, int order, int row, int col)
-{
-    int                 size;
-    unsigned long long  used;
-
-    size = board_size(order);
-    used = 0;
-    mark_row_used(tb, size, row, &used);
-    mark_col_used(tb, size, col, &used);
-    mark_box_used(tb, order, row, col, &used);
-    return (~used & full_mask(size));
+    return ((row / order) * order + (col / order));
 }
 
 static int count_bits(unsigned long long mask)
@@ -89,8 +31,67 @@ static int count_bits(unsigned long long mask)
     return (count);
 }
 
-static int find_best_cell(int **tb, int order, int *best_row, int *best_col,
-    unsigned long long *best_mask)
+static int init_masks(int **tb, int order, unsigned long long *row_used,
+    unsigned long long *col_used, unsigned long long *box_used)
+{
+    int size;
+    int r;
+    int c;
+    int val;
+    int box;
+    unsigned long long bit;
+
+    size = board_size(order);
+    r = 0;
+    while (r < size)
+    {
+        row_used[r] = 0;
+        col_used[r] = 0;
+        box_used[r] = 0;
+        r++;
+    }
+    r = 0;
+    while (r < size)
+    {
+        c = 0;
+        while (c < size)
+        {
+            val = tb[r][c];
+            if (val < 0 || val > size)
+                return (0);
+            if (val != 0)
+            {
+                bit = (1ULL << (val - 1));
+                box = box_index(order, r, c);
+                if ((row_used[r] & bit) || (col_used[c] & bit)
+                    || (box_used[box] & bit))
+                    return (0);
+                row_used[r] |= bit;
+                col_used[c] |= bit;
+                box_used[box] |= bit;
+            }
+            c++;
+        }
+        r++;
+    }
+    return (1);
+}
+
+static unsigned long long possible_mask(int order, int row, int col,
+    unsigned long long *row_used, unsigned long long *col_used,
+    unsigned long long *box_used)
+{
+    int                 box;
+    unsigned long long  used;
+
+    box = box_index(order, row, col);
+    used = row_used[row] | col_used[col] | box_used[box];
+    return (~used & full_mask(board_size(order)));
+}
+
+static int find_best_cell(int **tb, int order, unsigned long long *row_used,
+    unsigned long long *col_used, unsigned long long *box_used,
+    int *best_row, int *best_col, unsigned long long *best_mask)
 {
     int                 size;
     int                 min_options;
@@ -109,7 +110,8 @@ static int find_best_cell(int **tb, int order, int *best_row, int *best_col,
         {
             if (tb[row][col] == 0)
             {
-                possible = get_possible(tb, order, row, col);
+                possible = possible_mask(order, row, col,
+                        row_used, col_used, box_used);
                 count = count_bits(possible);
                 if (count == 0)
                     return (-1);
@@ -130,24 +132,44 @@ static int find_best_cell(int **tb, int order, int *best_row, int *best_col,
     return (1);
 }
 
-static int backtrack(int **tb, int order);
-
-
-static int try_values(int **tb, int order, int row, int col,
-    unsigned long long possible)
+static int backtrack(int **tb, int order, unsigned long long *row_used,
+    unsigned long long *col_used, unsigned long long *box_used)
 {
-    int size;
-    int val;
+    int                 row;
+    int                 col;
+    int                 status;
+    int                 box;
+    int                 val;
+    int                 size;
+    unsigned long long  possible;
+    unsigned long long  bit;
 
+    row = 0;
+    col = 0;
+    possible = 0;
+    status = find_best_cell(tb, order, row_used, col_used, box_used,
+            &row, &col, &possible);
+    if (status == 0)
+        return (1);
+    if (status == -1)
+        return (0);
+    box = box_index(order, row, col);
     size = board_size(order);
     val = 1;
     while (val <= size)
     {
-        if (possible & (1ULL << (val - 1)))
+        bit = (1ULL << (val - 1));
+        if (possible & bit)
         {
             tb[row][col] = val;
-            if (backtrack(tb, order))
+            row_used[row] |= bit;
+            col_used[col] |= bit;
+            box_used[box] |= bit;
+            if (backtrack(tb, order, row_used, col_used, box_used))
                 return (1);
+            row_used[row] ^= bit;
+            col_used[col] ^= bit;
+            box_used[box] ^= bit;
             tb[row][col] = 0;
         }
         val++;
@@ -155,31 +177,22 @@ static int try_values(int **tb, int order, int row, int col,
     return (0);
 }
 
-static int backtrack(int **tb, int order)
-{
-    int                 row;
-    int                 col;
-    int                 status;
-    unsigned long long  possible;
-
-    row = 0;
-    col = 0;
-    possible = 0;
-    status = find_best_cell(tb, order, &row, &col, &possible);
-    if (status == 0)
-        return (1);
-    if (status == -1)
-        return (0);
-    return (try_values(tb, order, row, col, possible));
-}
-
 void    solve(int **tb, int order)
 {
+    unsigned long long  row_used[63];
+    unsigned long long  col_used[63];
+    unsigned long long  box_used[63];
+
     if (board_size(order) >= 64)
     {
         printf("Order too large to solve\n");
         return ;
     }
-    if (!backtrack(tb, order))
+    if (!init_masks(tb, order, row_used, col_used, box_used))
+    {
+        printf("Invalid initial board\n");
+        return ;
+    }
+    if (!backtrack(tb, order, row_used, col_used, box_used))
         printf("No solution found\n");
 }

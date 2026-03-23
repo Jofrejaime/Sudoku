@@ -3,6 +3,7 @@ CFLAGS = -Wall -Wextra -Werror -I.
 
 NAME = sudoku
 OBJ_DIR = obj
+MAP ?= maps/map4.txt
 
 SRCS = \
 	main.c \
@@ -32,6 +33,18 @@ fclean: clean
 re: fclean all
 
 run: $(NAME)
-	./$(NAME) map2.txt
+	./$(NAME) $(MAP)
 
-.PHONY: all clean fclean re run
+run1: $(NAME)
+	./$(NAME) maps/map1.txt
+
+run2: $(NAME)
+	./$(NAME) maps/map2.txt
+
+run3: $(NAME)
+	./$(NAME) maps/map3.txt
+
+run4: $(NAME)
+	./$(NAME) maps/map4.txt
+
+.PHONY: all clean fclean re run run1 run2 run3 run4
