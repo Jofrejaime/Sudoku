@@ -7,8 +7,10 @@ OBJ_DIR = obj
 SRCS = \
 	main.c \
 	backtracking/backtraking.c \
-	utils/get_next_line.c \
-	utils/utils.c
+	general_utils/get_next_line.c \
+	general_utils/utils.c \
+	validator/parser.c \
+	validator/loader.c
 
 OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o)
 

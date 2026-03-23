@@ -9,12 +9,13 @@ int main(int argc, char *argv[])
         printf("entrada invalida!\n");
         return (1);
     }
-    sudoku = validate(argv, argc);
+    sudoku = load_sudoku(argv[1]);
     if (!sudoku)
     {
         printf("invalid map!\n");
         return (1);
     }
-
     print(sudoku->tab, sudoku->order);
+    free_sudoku(sudoku);
+    return (0);
 }
