@@ -1,3 +1,9 @@
+# Grupo 3
+
+Feito por: Jofre Jaime  
+Lucio Vitorino  
+E cristina Mazebo
+
 # Sudoku
 
 Projeto Sudoku em C.
